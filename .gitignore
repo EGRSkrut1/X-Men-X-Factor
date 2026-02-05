@@ -1,0 +1,51 @@
+# Скомпилированные файлы
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/
+
+# Файлы Visual Studio
+*.sln
+*.suo
+*.opensdf
+*.sdf
+.vs/
+
+# Внешние акторы UE5
+__ExternalActors__/
+__ExternalObjects__/
+
+# Стандартный контент UE
+Content/ThirdPerson/
+Content/LevelPrototyping/
+
+# Разрешаем папку Unarmed
+!Content/Characters/Mannequins/Anims/Unarmed/
+
+# Стандартные анимки
+Content/Characters/Mannequins/Anims/Death/
+Content/Characters/Mannequins/Anims/Pistol/
+Content/Characters/Mannequins/Anims/Rifle/
+
+# Шаблонные вариант папки
+Content/Variant_*/
+Source/xfactor/Variant_*/
+
+# Сенсорное управление
+Content/Input/Touch/
+
+# Старые файлы шаблона персонажа
+Source/xfactor/Private/xfactorCharacter.cpp
+Source/xfactor/Public/xfactorCharacter.h
+
+# xfactor.cpp только в корне проекта (дубль)
+/xfactor.cpp
+
+# Временные файлы
+*.log
+*.tmp
+*.asset
+
+# .vsconfig (локальный файл VS)
+.vsconfig
