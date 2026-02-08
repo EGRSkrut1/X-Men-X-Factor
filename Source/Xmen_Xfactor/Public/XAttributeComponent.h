@@ -1,63 +1,82 @@
 #pragma once
 
-#include <vector>
-#include <functional>
-#include <string>
+#include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
+#include "XAttributeComponent.generated.h"
 
-/** * HP
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, Delta);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
+
+/** 
+* HP
 */
-class AttributeComponent
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class XMEN_XFACTOR_API UXAttributeComponent : public UActorComponent
 {
+
+    GENERATED_BODY()
+
 public:
     /** *
     * @param InMaxHealth Staring max health
     */
-    AttributeComponent(float InMaxHealth = 100.0f);
+    UXAttributeComponent();
 
 public:
     /** Health change: (NewHealth, Delta) */
-    std::function<void(float, float)> OnHealthChanged;
+    UPROPERTY(BlueprintAssignable, Category = "Attributes")
+    FOnHealthChanged OnHealthChanged;
 
     /** Death event */
-    std::function<void()> OnDeath;
+    UPROPERTY(BlueprintAssignable, Category = "Attributes")
+    FOnDeath OnDeath;
 
 protected:
-    /** * Max Health
+    /** 
+    * Max Health
     */
+    UPROPERTY(EditDefaultsOnly, Category = "Attributes")
     float MaxHealth;
 
-    /** * Current Health
+    /** 
+    * Current Health
     */
+    UPROPERTY(EditDefaultsOnly, Category = "Attributes")
     float CurrentHealth;
 
 private:
-    /** * Flag of living
+    /** 
+    * Flag of living
     */
     bool bIsAlive;
 
 public:
-    /** * HP Change
-    * * @param Delta How much changed
+    /** 
+    * HP Change
+    * 
+    * @param Delta How much changed
     */
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
     void ApplyHealthChange(float Delta);
 
-    /** * Returning current health
+    /** 
+    * Returning current health
     * @return float
     */
-    float GetHealth() const { return CurrentHealth; }
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
+    float GetHealth() const;
 
-    /** * Returning max health
+    /**
+    * Returning max health
     * @return float
     */
-    float GetMaxHealth() const { return MaxHealth; }
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
+    float GetMaxHealth() const;
 
-    /** * Check if guy is alive or not
-    * @return bool
+    /** 
+    * Check if guy is alive or not
+    * @return alive status
     */
-    bool IsAlive() const { return bIsAlive; }
-
-private:
-    /** * Starting state
-    */
-    void Initialize();
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
+    bool IsAlive() const;
 };

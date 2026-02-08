@@ -1,26 +1,15 @@
 #include "XAttributeComponent.h"
-#include <algorithm> // For std::clamp
-#include <iostream>  // Like UE_LOG
 
-AttributeComponent::AttributeComponent(float InMaxHealth)
+UXAttributeComponent::UXAttributeComponent()
 {
-    MaxHealth = InMaxHealth;
+    MaxHealth = 100.0f;
     CurrentHealth = MaxHealth;
     bIsAlive = true;
 
-    Initialize();
+    UE_LOG(LogTemp, Log, TEXT("AttributeComponent Inititalized"));
 }
 
-void AttributeComponent::Initialize()
-{
-    // Starting HP check
-    bIsAlive = (CurrentHealth > 0.0f);
-
-    // Console status
-    std::cout << "[AttributeSystem] Component Initialized with " << MaxHealth << " HP." << std::endl;
-}
-
-void AttributeComponent::ApplyHealthChange(float Delta)
+void UXAttributeComponent::ApplyHealthChange(float Delta)
 {
     // If characters is dead do not decrease HP
     if (!bIsAlive && Delta < 0.0f)
@@ -31,7 +20,7 @@ void AttributeComponent::ApplyHealthChange(float Delta)
     float OldHealth = CurrentHealth;
 
     // Limit between 0 and max health.
-    CurrentHealth = std::clamp(CurrentHealth + Delta, 0.0f, MaxHealth);
+    CurrentHealth = FMath::Clamp(CurrentHealth + Delta, 0.0f, MaxHealth);
 
     float ActualDelta = CurrentHealth - OldHealth;
 
@@ -39,24 +28,30 @@ void AttributeComponent::ApplyHealthChange(float Delta)
     if (ActualDelta != 0.0f)
     {
         // Change event
-        if (OnHealthChanged)
-        {
-            OnHealthChanged(CurrentHealth, ActualDelta);
-        }
+        OnHealthChanged.Broadcast(CurrentHealth, ActualDelta);
+        
 
         // Check if dying
         if (CurrentHealth <= 0.0f && bIsAlive)
         {
             bIsAlive = false;
-            if (OnDeath)
-            {
-                OnDeath();
-            }
-        }
-        // Ressurection
-        else if (CurrentHealth > 0.0f && !bIsAlive)
-        {
-            bIsAlive = true;
+            OnDeath.Broadcast();
+            
         }
     }
+}
+
+float UXAttributeComponent::GetMaxHealth() const
+{
+    return MaxHealth;
+}
+
+float UXAttributeComponent::GetHealth() const
+{
+    return CurrentHealth;
+}
+
+bool UXAttributeComponent::IsAlive() const
+{
+    return bIsAlive;
 }
