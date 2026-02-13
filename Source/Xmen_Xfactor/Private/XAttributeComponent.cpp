@@ -1,46 +1,66 @@
 #include "XAttributeComponent.h"
+#include "Math/UnrealMathUtility.h" // Required for FMath::Clamp and FMath::Abs
 
 UXAttributeComponent::UXAttributeComponent()
 {
-    // Initialize Health
+    // Optimization: We don't need this component to run every frame
+    PrimaryComponentTick.bCanEverTick = false;
+
+    // --- 1. Health Initialization ---
     MaxHealth = 100.0f;
     CurrentHealth = MaxHealth;
     bIsAlive = true;
 
-    // Initialize Action Points
-    MaxActionPoints = 10.0f; // Default value, can be changed in Blueprint
+    // --- 2. Action Points Initialization ---
+    MaxActionPoints = 10.0f;
     CurrentActionPoints = MaxActionPoints;
 
-    UE_LOG(LogTemp, Log, TEXT("AttributeComponent Initialized"));
+    // --- 3. Identity Initialization (Default: Neutral NPC) ---
+    SquadSlotIndex = 0;      // 0 = Not in player squad
+    bIsAllyNPC = false;      // Not a generic ally
+    bIsEnemy = false;        // Not an enemy
+    bIsInanimateObject = false; // Is a living character
+
+    UE_LOG(LogTemp, Log, TEXT("XAttributeComponent: Initialized"));
 }
+
+// ==============================================================================
+// HEALTH SYSTEM
+// ==============================================================================
 
 bool UXAttributeComponent::ApplyHealthChange(float Delta)
 {
-    // 1. If dead and taking damage, ignore.
+    // Logic: Dead characters cannot take more damage (unless we add "Gibs" later)
     if (!bIsAlive && Delta < 0.0f)
     {
         return false;
     }
 
+    // Logic: Inanimate objects (like whatever Artem thinks is the item) might take damage, but maybe not Heal?
+    // For now, we allow both, but you can add specific logic here:
+    // if (bIsInanimateObject && Delta > 0.0f) return false; // Objects can't heal
+
     float OldHealth = CurrentHealth;
 
-    // 2. Clamp between 0 and Max
+    // Apply Math: Clamp ensures Health never goes below 0 or above Max
     CurrentHealth = FMath::Clamp(CurrentHealth + Delta, 0.0f, MaxHealth);
 
     float ActualDelta = CurrentHealth - OldHealth;
 
-    // 3. Only broadcast if value actually changed
+    // Only broadcast if value actually changed
     if (ActualDelta != 0.0f)
     {
         OnHealthChanged.Broadcast(CurrentHealth, ActualDelta);
 
-        // Check for Death
+        // Death Check
         if (CurrentHealth <= 0.0f && bIsAlive)
         {
             bIsAlive = false;
+
+            // Broadcast death so Character can play Ragdoll/Animation
             OnDeath.Broadcast();
 
-            UE_LOG(LogTemp, Warning, TEXT("AttributeComponent: Death message placeholder, whatever Artem waill want."));
+            UE_LOG(LogTemp, Warning, TEXT("XAttributeComponent: Owner [%s] has Died/Destroyed."), *GetOwner()->GetName());
         }
         return true;
     }
@@ -50,21 +70,44 @@ bool UXAttributeComponent::ApplyHealthChange(float Delta)
 
 bool UXAttributeComponent::ApplyDamage(float DamageAmount)
 {
-    // Simply calls Change with a negative value
-    // Abs ensures we always pass a negative number even if user passes -50
+    // Helper: Converts positive damage number (50) to negative delta (-50)
+    // FMath::Abs ensures safety in case someone accidentally passes -50
     return ApplyHealthChange(-FMath::Abs(DamageAmount));
 }
 
+float UXAttributeComponent::GetHealth() const
+{
+    return CurrentHealth;
+}
+
+float UXAttributeComponent::GetMaxHealth() const
+{
+    return MaxHealth;
+}
+
+bool UXAttributeComponent::IsAlive() const
+{
+    return bIsAlive;
+}
+
+// ==============================================================================
+// ACTION POINTS (AP) SYSTEM
+// ==============================================================================
+
 bool UXAttributeComponent::ApplyActionPointsChange(float Delta)
 {
-    float OldActionPoints = CurrentActionPoints;
+    // Logic: Inanimate objects usually don't have AP.
+    if (bIsInanimateObject)
+    {
+        return false;
+    }
 
-    // Limit between 0 and Max Action Points
+    float OldAP = CurrentActionPoints;
+
     CurrentActionPoints = FMath::Clamp(CurrentActionPoints + Delta, 0.0f, MaxActionPoints);
 
-    float ActualDelta = CurrentActionPoints - OldActionPoints;
+    float ActualDelta = CurrentActionPoints - OldAP;
 
-    // If the value actually changed
     if (ActualDelta != 0.0f)
     {
         OnActionPointsChanged.Broadcast(CurrentActionPoints, ActualDelta);
@@ -76,22 +119,12 @@ bool UXAttributeComponent::ApplyActionPointsChange(float Delta)
 
 bool UXAttributeComponent::HasEnoughActionPoints(float Cost) const
 {
+    // Inanimate objects have no AP
+    if (bIsInanimateObject)
+    {
+        return false;
+    }
     return CurrentActionPoints >= Cost;
-}
-
-float UXAttributeComponent::GetMaxHealth() const
-{
-    return MaxHealth;
-}
-
-float UXAttributeComponent::GetHealth() const
-{
-    return CurrentHealth;
-}
-
-bool UXAttributeComponent::IsAlive() const
-{
-    return bIsAlive;
 }
 
 float UXAttributeComponent::GetActionPoints() const
@@ -102,4 +135,33 @@ float UXAttributeComponent::GetActionPoints() const
 float UXAttributeComponent::GetMaxActionPoints() const
 {
     return MaxActionPoints;
+}
+
+// ==============================================================================
+// IDENTITY / SQUAD SYSTEM
+// ==============================================================================
+
+bool UXAttributeComponent::IsInPlayerSquad() const
+{
+    // If Slot is 1, 2, 3, or 4, they are in the active squad
+    return SquadSlotIndex >= 1 && SquadSlotIndex <= 4;
+}
+
+void UXAttributeComponent::SetAsEnemy()
+{
+    bIsEnemy = true;
+
+    // Safety: An enemy cannot be in the player's squad or an ally
+    bIsAllyNPC = false;
+    SquadSlotIndex = 0;
+}
+
+void UXAttributeComponent::SetAsSquadMember(int32 NewSlotID)
+{
+    // Clamp to valid squad slots (1-4)
+    SquadSlotIndex = FMath::Clamp(NewSlotID, 1, 4);
+
+    // Safety: Squad members are not enemies
+    bIsEnemy = false;
+    bIsAllyNPC = false; // They are controlled characters, not NPCs
 }

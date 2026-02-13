@@ -4,69 +4,73 @@
 #include "Components/ActorComponent.h"
 #include "XAttributeComponent.generated.h"
 
-// Delegate for Health
+// Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, Delta);
-// Delegate for Action Points
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionPointsChanged, float, NewValue, float, Delta);
-// Delegate for Death
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 
-/** * Attribute Component: Handles Health and Action Points
-*/
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class XMEN_XFACTOR_API UXAttributeComponent : public UActorComponent
 {
     GENERATED_BODY()
 
 public:
-    /** Constructor */
     UXAttributeComponent();
 
-public:
-    /** Triggered when Health changes */
+    // --- Delegates ---
     UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
     FOnHealthChanged OnHealthChanged;
 
-    /** Triggered when Action Points change */
     UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
     FOnActionPointsChanged OnActionPointsChanged;
 
-    /** Triggered when Health reaches 0 */
     UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
     FOnDeath OnDeath;
 
 protected:
-    /** Max Health */
+    // --- Health ---
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Health")
     float MaxHealth;
 
-    /** Current Health */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Health")
     float CurrentHealth;
 
-    /** Max Action Points */
+    // --- Action Points ---
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|ActionPoints")
     float MaxActionPoints;
 
-    /** Current Action Points */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|ActionPoints")
     float CurrentActionPoints;
 
+    // --- Idetifiers ---
+
+    /** * Slot of squad
+     * 0 = Not in squad.
+     * 1-4 = Number of slots in squad.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", meta = (ClampMin = "0", ClampMax = "4"))
+    int32 SquadSlotIndex;
+
+    /** Flag: NPC Ally */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+    bool bIsAllyNPC;
+
+    /** Flag: Enemy */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+    bool bIsEnemy;
+
+    /** Flag: Item */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+    bool bIsInanimateObject;
+
 private:
-    /** Alive State Flag */
     bool bIsAlive;
 
 public:
-    /** * Modifies Health (Heal or Damage)
-    * @param Delta Amount to change (negative for damage)
-    * @return True if value actually changed
-    */
+    // --- Health Methods ---
     UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
     bool ApplyHealthChange(float Delta);
 
-    /** * Helper function specifically for taking damage
-    * @param DamageAmount Positive number representing damage
-    */
     UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
     bool ApplyDamage(float DamageAmount);
 
@@ -79,16 +83,10 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
     bool IsAlive() const;
 
-    /** * Modifies Action Points (Spend or Regain)
-    * @param Delta Amount to change (negative to spend)
-    * @return True if value actually changed
-    */
+    // --- AP Methods ---
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
     bool ApplyActionPointsChange(float Delta);
 
-    /** * Check if character has enough AP for an action
-    * @param Cost The cost of the action (positive number)
-    */
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
     bool HasEnoughActionPoints(float Cost) const;
 
@@ -97,4 +95,22 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
     float GetMaxActionPoints() const;
+
+    // --- Identification methods ---
+
+    /** Check if active in squad. */
+    UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
+    bool IsInPlayerSquad() const;
+
+    /** Return slot number. */
+    UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
+    int32 GetSquadSlot() const { return SquadSlotIndex; }
+
+    /** Set as enemy */
+    UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
+    void SetAsEnemy();
+
+    /** Set as squad member. */
+    UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
+    void SetAsSquadMember(int32 NewSlotID);
 };
