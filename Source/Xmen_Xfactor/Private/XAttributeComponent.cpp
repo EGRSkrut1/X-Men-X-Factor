@@ -12,7 +12,7 @@ UXAttributeComponent::UXAttributeComponent()
     bIsAlive = true;
 
     // --- 2. Action Points Initialization ---
-    MaxActionPoints = 10.0f;
+    MaxActionPoints = 10;
     CurrentActionPoints = MaxActionPoints;
 
     // --- 3. Identity Initialization (Default: Neutral NPC) ---
@@ -94,7 +94,7 @@ bool UXAttributeComponent::IsAlive() const
 // ACTION POINTS (AP) SYSTEM
 // ==============================================================================
 
-bool UXAttributeComponent::ApplyActionPointsChange(float Delta)
+bool UXAttributeComponent::ApplyActionPointsChange(int32 Delta)
 {
     // Logic: Inanimate objects usually don't have AP.
     if (bIsInanimateObject)
@@ -102,13 +102,13 @@ bool UXAttributeComponent::ApplyActionPointsChange(float Delta)
         return false;
     }
 
-    float OldAP = CurrentActionPoints;
+    int32 OldAP = CurrentActionPoints;
 
-    CurrentActionPoints = FMath::Clamp(CurrentActionPoints + Delta, 0.0f, MaxActionPoints);
+    CurrentActionPoints = FMath::Clamp(CurrentActionPoints + Delta, 0, MaxActionPoints);
 
-    float ActualDelta = CurrentActionPoints - OldAP;
+    int32 ActualDelta = CurrentActionPoints - OldAP;
 
-    if (ActualDelta != 0.0f)
+    if (ActualDelta != 0)
     {
         OnActionPointsChanged.Broadcast(CurrentActionPoints, ActualDelta);
         return true;
@@ -117,7 +117,7 @@ bool UXAttributeComponent::ApplyActionPointsChange(float Delta)
     return false;
 }
 
-bool UXAttributeComponent::HasEnoughActionPoints(float Cost) const
+bool UXAttributeComponent::HasEnoughActionPoints(int32 Cost) const
 {
     // Inanimate objects have no AP
     if (bIsInanimateObject)
@@ -127,12 +127,12 @@ bool UXAttributeComponent::HasEnoughActionPoints(float Cost) const
     return CurrentActionPoints >= Cost;
 }
 
-float UXAttributeComponent::GetActionPoints() const
+int32 UXAttributeComponent::GetActionPoints() const
 {
     return CurrentActionPoints;
 }
 
-float UXAttributeComponent::GetMaxActionPoints() const
+int32 UXAttributeComponent::GetMaxActionPoints() const
 {
     return MaxActionPoints;
 }
@@ -145,6 +145,11 @@ bool UXAttributeComponent::IsInPlayerSquad() const
 {
     // If Slot is 1, 2, 3, or 4, they are in the active squad
     return SquadSlotIndex >= 1 && SquadSlotIndex <= 4;
+}
+
+int32 UXAttributeComponent::GetSquadSlot() const
+{
+    return SquadSlotIndex;
 }
 
 void UXAttributeComponent::SetAsEnemy()

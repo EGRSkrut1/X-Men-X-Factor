@@ -2,4 +2,9 @@
 
 
 #include "Character/TacticalCharacter/XTacticalCharacter.h"
+#include "XAttributeComponent.h"
 
+AXTacticalCharacter::AXTacticalCharacter()
+{
+	AttributeComponent = CreateDefaultSubobject<UXAttributeComponent>("AttributeComponent");
+}

@@ -6,7 +6,7 @@
 
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, Delta);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionPointsChanged, float, NewValue, float, Delta);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionPointsChanged, int32, NewValue, int32, Delta);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -37,10 +37,10 @@ protected:
 
     // --- Action Points ---
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|ActionPoints")
-    float MaxActionPoints;
+    int32 MaxActionPoints;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|ActionPoints")
-    float CurrentActionPoints;
+    int32 CurrentActionPoints;
 
     // --- Idetifiers ---
 
@@ -85,16 +85,16 @@ public:
 
     // --- AP Methods ---
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
-    bool ApplyActionPointsChange(float Delta);
+    bool ApplyActionPointsChange(int32 Delta);
 
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
-    bool HasEnoughActionPoints(float Cost) const;
+    bool HasEnoughActionPoints(int32 Cost) const;
 
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
-    float GetActionPoints() const;
+    int32 GetActionPoints() const;
 
     UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
-    float GetMaxActionPoints() const;
+    int32 GetMaxActionPoints() const;
 
     // --- Identification methods ---
 
@@ -104,7 +104,7 @@ public:
 
     /** Return slot number. */
     UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
-    int32 GetSquadSlot() const { return SquadSlotIndex; }
+    int32 GetSquadSlot() const;
 
     /** Set as enemy */
     UFUNCTION(BlueprintCallable, Category = "Attributes|Identity")
