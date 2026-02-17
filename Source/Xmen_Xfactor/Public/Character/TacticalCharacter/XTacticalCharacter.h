@@ -6,8 +6,6 @@
 #include "Character/XBaseCharacter.h"
 #include "XTacticalCharacter.generated.h"
 
-class UXAttributeComponent;
-
 /**
  * 
  */
@@ -15,12 +13,5 @@ UCLASS()
 class XMEN_XFACTOR_API AXTacticalCharacter : public AXBaseCharacter
 {
 	GENERATED_BODY()
-
-public:
-	AXTacticalCharacter();
-
-protected:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UXAttributeComponent* AttributeComponent;
+	
 };
