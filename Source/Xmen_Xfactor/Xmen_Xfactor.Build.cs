@@ -13,7 +13,8 @@ public class Xmen_Xfactor : ModuleRules
             "CoreUObject", 
             "Engine", 
             "InputCore", 
-            "EnhancedInput" });
+            "EnhancedInput",
+            "GameplayTags" });
 
         PrivateDependencyModuleNames.AddRange(new string[] {
             "Slate",
