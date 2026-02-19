@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "GameplayTagContainer.h"
+#include "GameplayTagContainer.h" 
 #include "XAttributeComponent.generated.h"
 
-// Delegates.
+// Updated Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, Delta);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionPointsChanged, float, NewValue, float, Delta);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActionPointsChanged, int32, NewValue, int32, Delta);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusChanged, FGameplayTag, Tag);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeath);
 
@@ -26,7 +26,6 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
 	FOnActionPointsChanged OnActionPointsChanged;
 
-	/** Triggered when a status tag is added or removed */
 	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
 	FOnStatusChanged OnStatusChanged;
 
@@ -34,72 +33,84 @@ public:
 	FOnDeath OnDeath;
 
 protected:
-	// --- EXISTING STATS ---
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Health")
+	// --- CORE STATS ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
 	float MaxHealth;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Health")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
 	float CurrentHealth;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|ActionPoints")
-	float MaxActionPoints;
+	// AP now int32
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+	int32 MaxActionPoints;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|ActionPoints")
-	float CurrentActionPoints;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes")
+	int32 CurrentActionPoints;
 
-	// --- GAMEPLAY TAGS ---
+	// --- IDENTITY ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes", meta = (ClampMin = "0", ClampMax = "4"))
+	int32 SquadSlotIndex;
 
-	/** Container holding all active status effects */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+	bool bIsAllyNPC;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+	bool bIsEnemy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
+	bool bIsInanimateObject;
+
+	// --- STATUS EFFECTS ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Tags")
 	FGameplayTagContainer ActiveGameplayTags;
 
-	/** How much damage Bleeding deals per tick */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Tags")
 	float BleedDamageAmount;
 
-	/** How often Bleeding ticks (in seconds) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Tags")
 	float BleedTickInterval;
 
 private:
 	bool bIsAlive;
-	FTimerHandle TimerHandle_Bleeding; // Internal timer for DoT
+	FTimerHandle TimerHandle_Bleeding;
 
 public:
-	// --- TAG MANAGEMENT ---
+	// --- HEALTH METHODS ---
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool ApplyHealthChange(float Delta);
 
-	/** Adds a status effect */
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool ApplyDamage(float DamageAmount);
+
+	// --- ACTION POINTS METHODS (Updated to int32) ---
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool ApplyActionPointsChange(int32 Delta);
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool HasEnoughActionPoints(int32 Cost) const;
+
+	// --- STUN LOGIC ---
+	/** Returns true if character has Status.Stunned tag */
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool IsStunned() const;
+
+	// --- TAG MANAGEMENT ---
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Tags")
 	void AddStatusTag(FGameplayTag TagToAdd);
 
-	/** Removes a status effect */
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Tags")
 	void RemoveStatusTag(FGameplayTag TagToRemove);
 
-	/** Checks if specific tag is active */
-	UFUNCTION(BlueprintCallable, Category = "Attributes|Tags")
-	bool HasStatusTag(FGameplayTag TagToCheck) const;
-
-	// --- EXISTING METHODS ---
-
-	UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
-	bool ApplyHealthChange(float Delta);
-
-	// Updated to check for STUN
-	UFUNCTION(BlueprintCallable, Category = "Attributes|ActionPoints")
-	bool HasEnoughActionPoints(float Cost) const;
-
-	// Rest of getters/setters/Identity
+	// --- GETTERS ---
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	float GetHealth() const { return CurrentHealth; }
 
-	// Identity logic needs to be here as well
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
-	int32 SquadSlotIndex;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes")
-	bool bIsInanimateObject;
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	int32 GetActionPoints() const { return CurrentActionPoints; }
+
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
+	bool IsAlive() const { return bIsAlive; }
 
 protected:
-	/** Internal function called by Timer to deal damage */
 	void HandleBleeding();
 };
